@@ -7,6 +7,8 @@ typedef struct mesh
     Vec3 *vertices;
     Vec3 *normales;
     Cara_t *indices;
+    //Cara_t *n_indices;
+    //Cara_t *t_indices;
     Triangulo *triangulos;
 
     Vec3 rotacion;

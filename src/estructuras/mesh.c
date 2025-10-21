@@ -31,14 +31,14 @@ Mesh loadMesh(const char* filePath, MeshOpciones opt)
             Cara_t vertice_id;
             Cara_t normal_id;
             Cara_t textura_id;
-            sscanf(renglon+2, "%d %d %d %d %d %d %d %d %d",
-                                &vertice_id.a, &textura_id.a, &normal_id.a,
-                                &vertice_id.b, &textura_id.b, &normal_id.b,
-                                &vertice_id.c, &textura_id.c, &normal_id.c);
+            sscanf(renglon+2, "%d/%d/%d %d/%d/%d %d/%d/%d",
+                    &vertice_id.a, &textura_id.a, &normal_id.a,
+                    &vertice_id.b, &textura_id.b, &normal_id.b,
+                    &vertice_id.c, &textura_id.c, &normal_id.c);
             
             pushto_array(nuevo.indices, vertice_id);
-            //pushto_array(nuevo.normales, normales_id);
-            //pushto_array(nuevo.texturas, texturas_id);
+            //pushto_array(nuevo.n_indices, normal_id);
+            //pushto_array(nuevo.t_indices, vertice_id);
 
         }
     }

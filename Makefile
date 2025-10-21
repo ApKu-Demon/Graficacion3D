@@ -21,7 +21,7 @@ output = bin/render_cpu
 
 build:
 	mkdir -p bin
-	$(cc)  $(dflags) $(DVAR) $(source) -o $(output) $(sdl_include) $(sdl_lib) $(sdl_ttf_include) $(sdl_ttf_lib) -lm
+	$(cc)  $(cflags) $(DVAR) $(source) -o $(output) $(sdl_include) $(sdl_lib) $(sdl_ttf_include) $(sdl_ttf_lib) -lm
 
 clean:
 	rm -rf bin
