@@ -128,7 +128,7 @@ void mat4_push_rotar(Mat4 *matriz, Vec3 rotacion)
 
 Vec4 mat4_dot_vec4(Mat4 *matriz, Vec4 *punto)
 {
-    Vec4 c;
+    Vec4 c={0};
 
     /*
     [a1, b1, c1, d1]        [x]

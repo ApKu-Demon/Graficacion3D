@@ -2,6 +2,7 @@
 #include "linea.h"
 #include "../math/vectores.h"
 #include "figuras.h"
+#include <stdio.h>
 
 // Prototipos
 void acomodo_vec(Triangulo *triangulo);
@@ -22,6 +23,7 @@ void fill_trian(Triangulo triangulo)
 
 	if(triangulo.p[1].unpack.y == triangulo.p[2].unpack.y)
 	{
+		printf("entre");
 		fill_flat_bottom(triangulo.p[0], triangulo.p[2], triangulo.p[1], triangulo.color.hex);
 	}
 	else if(triangulo.p[0].unpack.y == triangulo.p[1].unpack.y)
@@ -81,20 +83,34 @@ void fill_flat_top(Vec3 p1, Vec3 c, Vec3 p2, uint32_t color) {
 
 void acomodo_vec(Triangulo *triangulo)
 {
-	Vec3 *vectores[3] = {&triangulo->p[0], &triangulo->p[1], &triangulo->p[2]};
+	//Vec3 *vectores[3] = {&triangulo->p[0], &triangulo->p[1], &triangulo->p[2]};
 	Vec3 aux;
 
 	for(int i=0; i<3; i++)
 	{
-		for(int j=i+1; j<3; j++)
+		for(int j=0; j<3; j++)
 		{
-			if(vectores[i]->unpack.y > vectores[j]->unpack.y)
+			if(triangulo->p[i].unpack.y > triangulo->p[j].unpack.y)
 			{
-				aux = *(vectores[i]);
-				*(vectores[i]) = *(vectores[j]);
-				*(vectores[j]) = aux;
+				aux = triangulo->p[i];
+				triangulo->p[i] = triangulo->p[j];
+				triangulo->p[j] = aux;
 			}
 		}
 	}
 }
+
+Vec3 normal_triangulo(Triangulo *trian)
+{
+	Vec3 AB = resta_vec3(trian->p[1], trian->p[0]);
+	Vec3 AC = resta_vec3(trian->p[2], trian->p[0]);
+	normalizar_vec3_inplace(&AB);
+	normalizar_vec3_inplace(&AC);
+
+	Vec3 normal = cross_vec3(AC, AB);
+	normalizar_vec3_inplace(&normal);
+
+	return normal;
+}
+
 

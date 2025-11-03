@@ -45,6 +45,7 @@ typedef struct _triangulo
 	Color color;
 	TypeFig type;
 	float avg_z;
+	Vec3 normal;
 }Triangulo;
 
 typedef struct _linea
@@ -90,5 +91,7 @@ void fill_figura(Figuras *fig);
 void fill(Vec2 pos, uint32_t color);
 
 void fill_cuadro(Vec2 pos, int w, int h, uint32_t color, uint32_t contorno);
+
+Vec3 normal_triangulo(Triangulo *trian);
 
 

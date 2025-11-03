@@ -8,6 +8,7 @@
 #include "math/matrix.h"
 #include "draw/figuras.h"
 #include "memoria/memoria.h"
+#include "estructuras/luz.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +18,18 @@ Vec3 camara;
 Vec3 rotaciones;
 Vec3 escalamiento;
 
-const int fovf = 630;
+const int fovf = 640;
+
+typedef enum _render_mesh_mode
+{
+	RENDER_MESH_PUNTOS =	2<<0,
+	RENDER_MESH_VERTICES =	2<<1,
+	RENDER_MESH_RELLENO = 	2<<0,
+}RENDER_MESHES_MODES;
+
+//RENDER_MESHES_MODES render_mesh_mode = RENDER_MESH_PUNTOS | RENDER_MESH_RELLENO | RENDER_MESH_VERTICES;
+
+Luz luz = {{{0.f, 0.f, 1.f}}}; //estructura/Vec3/Union_del_Vec3 ---> {{{}}}
 
 int comparar(const void *a, const void *b)
 {
@@ -95,6 +107,7 @@ void transformar(void)
 				//escala ya que los puntos estan entre 0-1 
 				punto_proyectado.unpack.y *= estadosrender.ven_height/2.f;
 				punto_proyectado.unpack.x *= estadosrender.ven_width/2.f;
+				punto_proyectado.unpack.y *= -1;
 				//centrar
 				punto_proyectado.unpack.y += estadosrender.ven_height/2.f;
 				punto_proyectado.unpack.x += estadosrender.ven_width/2.f;
@@ -103,9 +116,14 @@ void transformar(void)
 				triangulo_proyectado.p[j].unpack.x = punto_proyectado.unpack.x;
 				triangulo_proyectado.p[j].unpack.y = punto_proyectado.unpack.y;
 				triangulo_proyectado.p[j].unpack.z = punto_proyectado.unpack.z;
-				triangulo_proyectado.avg_z = avg_z;
 			}
-			
+
+			// flat shadding
+			triangulo_proyectado.avg_z = avg_z;
+			triangulo_proyectado.color.hex = 0xAB1056FF;	// se deberia de cargar el color antes en mesh
+			triangulo_proyectado.normal = normal_triangulo(&triangulo_proyectado);
+			float intensidad = -dot_vec3(triangulo_proyectado.normal, luz.direccion);
+			triangulo_proyectado.color.hex = luz_intensidad(triangulo_proyectado.color.hex, intensidad);
 			//int dummy;
 			//scanf("%d", &dummy);
 			//cubo_triangulos[i] = triangulo_proyectado;
@@ -113,10 +131,12 @@ void transformar(void)
 		}
 
 		// painters algorithm oredenar por promedio de profundidad
+		/*
 		qsort(estadosrender.meshes[m].triangulos,
 				array_size(estadosrender.meshes[m].triangulos),
 				sizeof(estadosrender.meshes[m].triangulos[0]),
 				comparar);
+		*/
 	}
 }
 
@@ -209,7 +229,7 @@ void _init(void)
 	estadosrender.meshes[0].escala.unpack.y = 1.f;
 	estadosrender.meshes[0].escala.unpack.z = 1.f;
 
-	estadosrender.meshes[0].traslado.unpack.z = 5.f;
+	estadosrender.meshes[0].traslado.unpack.z = 4.5f;
 
 	/*
 	// es espacio local, crear el cubo
@@ -247,13 +267,18 @@ void render_frame(void)
 			// vertices de los triangulos
 			Triangulo trian = estadosrender.meshes[m].triangulos[i];	//cubo_triangulos[i];
 
+			/*
 			//painter algorithm
-			//fill_cuadro(trian.p[0], 4, 4, 0xff00ffff, 0xff00ffff);
-			//fill_cuadro(trian.p[1], 4, 4, 0xff00ffff, 0xff00ffff);
-			//fill_cuadro(trian.p[2], 4, 4, 0xff00ffff, 0xff00ffff);
-
+			if((render_mesh_mode & RENDER_MESH_PUNTOS) > 0)
+			{
+				fill_cuadro(trian.p[0], 4, 4, 0xff00ffff, 0xff00ffff);
+				fill_cuadro(trian.p[1], 4, 4, 0xff00ffff, 0xff00ffff);
+				fill_cuadro(trian.p[2], 4, 4, 0xff00ffff, 0xff00ffff);
+			}
+			*/
+			
 			// lineas de los triangulos
-			//fill_trian(trian.p[0], trian.p[1], trian.p[2], 0xff00ffff, 0xff00ffff);
+			//fill_trian(trian.p[0], trian.p[1], trian.p[2], trian.color.hex, trian.color.hex);
 			fill_trian(trian);
 
 			draw_trian(trian.p[0].unpack.x, trian.p[0].unpack.y,
