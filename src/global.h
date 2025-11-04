@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
+//#include <SDL3_ttf/SDL_ttf.h>
 #include "color/colores.h"
 #include "draw/figuras.h"
 #include "estructuras/mesh.h"
@@ -23,6 +23,6 @@ typedef struct _estado
 }EstadosRender;
 
 extern EstadosRender estadosrender;
-extern TTF_Font* font;
+//extern TTF_Font* font;
 
 

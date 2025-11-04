@@ -1,0 +1,87 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "name": "SBOM-SPDX-sdl3-3.2.20",
+  "creationInfo": {
+    "created": "2025-08-12T04:34:40Z",
+    "creators": [
+      "Tool: https://github.com/Homebrew/brew@4.6.3"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://formulae.brew.sh/spdx/sdl3-3.2.20.json",
+  "documentDescribes": [
+    "SPDXRef-Archive-sdl3-src",
+    "SPDXRef-Compiler",
+    "SPDXRef-Bottle-sdl3"
+  ],
+  "files": [],
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Archive-sdl3-src",
+      "name": "sdl3",
+      "versionInfo": "3.2.20",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "builtDate": "2025-08-04 16:58:55 UTC",
+      "licenseConcluded": "Zlib",
+      "downloadLocation": "https://github.com/libsdl-org/SDL/releases/download/release-3.2.20/SDL3-3.2.20.tar.gz",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "467600ae090dd28616fa37369faf4e3143198ff1da37729b552137e47f751a67"
+        }
+      ]
+    },
+    {
+      "SPDXID": "SPDXRef-Compiler",
+      "name": "clang",
+      "versionInfo": "16.4",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "downloadLocation": "NOASSERTION",
+      "checksums": [],
+      "externalRefs": []
+    },
+    {
+      "SPDXID": "SPDXRef-Bottle-sdl3",
+      "name": "sdl3",
+      "versionInfo": "3.2.20",
+      "filesAnalyzed": false,
+      "licenseDeclared": "NOASSERTION",
+      "builtDate": "2025-08-04 16:58:55 UTC",
+      "licenseConcluded": "Zlib",
+      "downloadLocation": "https://ghcr.io/v2/homebrew/core/sdl3/blobs/sha256:9290c0f8a75009a4c074799833b8ff427797a201f69a931051a636a296cb48d3",
+      "copyrightText": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:brew/homebrew/core/sdl3@3.2.20",
+          "referenceType": "purl"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9290c0f8a75009a4c074799833b8ff427797a201f69a931051a636a296cb48d3"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-File-sdl3",
+      "relationshipType": "PACKAGE_OF",
+      "relatedSpdxElement": "SPDXRef-Archive-sdl3-src"
+    },
+    {
+      "spdxElementId": "SPDXRef-Compiler",
+      "relationshipType": "BUILD_TOOL_OF",
+      "relatedSpdxElement": "SPDXRef-Package-sdl3-src"
+    }
+  ]
+}

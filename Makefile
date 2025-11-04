@@ -1,31 +1,24 @@
-cc = clang
-
+dflags = -Wall -Werror -pedantic -std=c99 -g 
+dflags = -Wall-Werror -pedantic -std=c99 -g 
 cflags = -Wall -Werror -pedantic -std=c99 -O2
-dflags = -Wall -Werror -pedantic -std=c99 -g -O0 -fsanitize=address, -fsanitize=undefined -fno-eliminate-unused-debug-types
 
-sdl_include = $(shell pkg-config --cflags sdl3)
-sdl_lib = $(shell pkg-config --libs sdl3)
+sdl_include = ./deps/sdl/i686-w64-mingw32/include
+sdl_lib = ./deps/sdl/i686-w64-mingw32/lib -lSDL3
+stb_include ?= ./deps/stb
 
-sdl_ttf_include = $(shell pkg-config --cflags sdl3-ttf)
-sdl_ttf_lib = $(shell pkg-config --libs sdl3-ttf)
-
-# Este es solo para buscar los archivos .c en src/
-#source = $(wildcard src/*.c)
-
-# Esto hace que el Makefile busque archivos .c en src/ y en todas sus subcarpetas
-source = $(wildcard src/**/*.c) $(wildcard src/*.c)
-
-DVAR=
-
+source = $(wildcard src/*.c) $(wildcard src/**/*.c)
 output = bin/render_cpu
+DVAR =
 
 build:
-	mkdir -p bin
-	$(cc)  $(cflags) $(DVAR) $(source) -o $(output) $(sdl_include) $(sdl_lib) $(sdl_ttf_include) $(sdl_ttf_lib) -lm
+	gcc $(cflags) $(DVAR) $(source) -o $(output) -I$(sdl_include) -I$(stb_include) -L$(sdl_lib) -lm
+	copy "deps\\sdl\\i686-w64-mingw32\\bin\\SDL3.dll" "bin\\SDL3.dll"
+	@echo "Compilo exitosamente!!"
 
-clean:
-	rm -rf bin
+debug:
+	gcc $(dflags) $(DVAR) $(source) -o $(output) -I$(sdl_include) -I$(stb_include) -L$(sdl_lib) -lm
+	copy "deps\\sdl\\i686-w64-mingw32\\bin\\SDL3.dll" "bin\\SDL3.dll"
+	@echo "Debugeo exitoso!!"
 
 run:
 	./$(output)
-
