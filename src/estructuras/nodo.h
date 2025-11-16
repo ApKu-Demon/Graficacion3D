@@ -1,11 +1,10 @@
 #pragma once
 
-typedef struct nodo
-{
+#include "../math/vectores.h"
+
+typedef struct _nodo{
     void *dato;
-    struct nodo *sig;
+    struct _nodo *sig;
 }Nodo;
 
-Nodo* crearNodo(void* dato);
-
-
+Nodo* crearNodo(void *vector);

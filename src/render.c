@@ -1,222 +1,287 @@
 #include "render.h"
-#include "render.h"
-#include "color/colores.h"
-#include "draw/draw.h"
-#include "draw/linea.h"
 #include "global.h"
-#include "math/vectores.h"
+#include "draw/draw.h"
 #include "math/matrix.h"
 #include "draw/figuras.h"
-#include "memoria/memoria.h"
+#include "math/vectores.h"
+#include "color/colores.h"
 #include "estructuras/luz.h"
+#include "memoria/memoria.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <SDL3/SDL_oldnames.h>
+
+#define N_PUNTOS 9 * 9 * 9
+#define N_CARAS 6 * 2
+
+Triangulo cubo_triangulos[N_CARAS];
 
 Vec3 camara;
 Vec3 rotaciones;
 Vec3 escalamiento;
 
-const int fovf = 640;
+/*
+int dotsFlag = 0;
+int vertexFlag = 0;
+int fillFlag = 0;
+*/
+int render_mesh_mode = 0;
 
 typedef enum _render_mesh_mode
 {
 	RENDER_MESH_PUNTOS =	2<<0,
 	RENDER_MESH_VERTICES =	2<<1,
-	RENDER_MESH_RELLENO = 	2<<0,
+	RENDER_MESH_RELLENO = 	2<<2,
+	RENDER_TEXT_MESH = 2<<3,
 }RENDER_MESHES_MODES;
 
-//RENDER_MESHES_MODES render_mesh_mode = RENDER_MESH_PUNTOS | RENDER_MESH_RELLENO | RENDER_MESH_VERTICES;
+int backFaceCullingFlag = 0;
 
-Luz luz = {{{0.f, 0.f, 1.f}}}; //estructura/Vec3/Union_del_Vec3 ---> {{{}}}
+const int fovf = 630;
 
-int comparar(const void *a, const void *b)
-{
+Luz luz = {{{0.f, 0.f, 1.f}}};
+
+// ANADIDO
+uint32_t *img = 0;
+
+Vec2 *punto_seleccionado = NULL;
+
+int comparar(const void *a, const void *b){
 	Triangulo *A = (Triangulo*)a;
 	Triangulo *B = (Triangulo*)b;
-	return A->avg_z - B->avg_z;
+
+	return A -> avg_z - B -> avg_z;
 }
 
-void transformar(void)
-{
-	for(int m=0; m<array_size(estadosrender.meshes); ++m)
-	{
+void transformar(void){
+	for(int m = 0; m < array_size(estadosrender.meshes); ++m){
 		free_array(estadosrender.meshes[m].triangulos);
 		estadosrender.meshes[m].triangulos = 0;
-		// por cada cara del buffer
-		int num_caras = array_size(estadosrender.meshes[m].indices);
-		for(int i=0; i<num_caras; i++)
-		{
-			Cara_t punto_cara = estadosrender.meshes[m].indices[i];	//cubo_caras[i];
-			Vec3 cara_vertice[3];
-			cara_vertice[0] = estadosrender.meshes[m].vertices[punto_cara.a-1];
-			cara_vertice[1] = estadosrender.meshes[m].vertices[punto_cara.b-1];
-			cara_vertice[2] = estadosrender.meshes[m].vertices[punto_cara.c-1];
 
-			// por cada vertice
+		// Por cada cara del buffer
+		int num_caras = array_size(estadosrender.meshes[m].indices);
+		int num_vertices = array_size(estadosrender.meshes[m].vertices);	// para verificar
+		for(int i = 0; i < num_caras; i++){
+			Cara_t punto_cara = estadosrender.meshes[m].indices[i];
+			Vec3 cara_vertice[3];
+
+			// **VERIFICACION CRÍTICA DEL INDICE**
+			if (punto_cara.a < 1 || punto_cara.a > num_vertices || 
+				punto_cara.b < 1 || punto_cara.b > num_vertices ||
+				punto_cara.c < 1 || punto_cara.c > num_vertices) 
+			{
+				fprintf(stderr, "ERROR CRITICO: Indice de vértice fuera de rango en la cara %d.\n", i);
+				fprintf(stderr, "Indices: a=%d, b=%d, c=%d. Max vertices: %d.\n", 
+						punto_cara.a, punto_cara.b, punto_cara.c, num_vertices);
+				estadosrender.run = 0; // Detiene la aplicación
+				continue; // Saltar esta cara corrupta
+			}
+
+			cara_vertice[0] = estadosrender.meshes[m].vertices[punto_cara.a - 1];
+			cara_vertice[1] = estadosrender.meshes[m].vertices[punto_cara.b - 1];
+			cara_vertice[2] = estadosrender.meshes[m].vertices[punto_cara.c - 1];
+
 			Triangulo triangulo_proyectado;
 			Vec3 vertices_transformados[3];
-			for(int j=0; j<3; ++j)
-			{
+			// Por cada vertice
+			// ++j o j++
+			for(int j = 0; j < 3; ++j){
 				Vec3 punto = cara_vertice[j];
 
-				// matriz de transformacion
+				// Matriz de transformacion
 				Mat4 mt = mat4_eye();
-				// Matriz identidad
-				//print_matriz(&mt);
-				
-				// escalamos
+				// Escalamos
 				mat4_push_escala(&mt, estadosrender.meshes[m].escala);
-				
-				// rotamos
+				// Rotamos
 				mat4_push_rotar(&mt, estadosrender.meshes[m].rotacion);
-				
-				// trasladamos
-				//mat4_push_traslado(&mt, camara);
-				mat4_push_traslado(&mt,estadosrender.meshes[m].traslado);
+				// Trasladamos
+				mat4_push_traslado(&mt, estadosrender.meshes[m].traslado);
 
 				Vec4 p = {{punto.unpack.x, punto.unpack.y, punto.unpack.z, 1.f}};
-			
+
 				p = mat4_dot_vec4(&mt, &p);
 				punto = vec4_to_vec3(&p);
-
 				vertices_transformados[j] = punto;
 			}
-			
-			// BACK-FACE CULLING						  
-			if(!back_face_culling(camara,vertices_transformados))
+
+			// Back-face culling
+			if(!back_face_culling(camara, vertices_transformados) && backFaceCullingFlag)
 				continue;
 
-			float avg_z = (vertices_transformados[0].unpack.z) +
-						  (vertices_transformados[1].unpack.z) +
-						  (vertices_transformados[2].unpack.z) / 3.f;
+			float avg_z = (vertices_transformados[0].unpack.z + 
+				       vertices_transformados[1].unpack.z +
+				       vertices_transformados[2].unpack.z) / 3.f;
 
-			for(int j=0;j<3;++j)
-			{
-				Vec4 pp = {{vertices_transformados[j].unpack.x,
-							vertices_transformados[j].unpack.y,
-							vertices_transformados[j].unpack.z, 1.f}};
-					
-				Mat4 PM = mat4_matriz_proyeccion(fovf, estadosrender.ven_height / (float)estadosrender.ven_width, 1.f, 100.f);
-					
-				// Matriz proyeccion
-				//print_matriz(&PM);
+			triangulo_proyectado.pos[0] = vertices_transformados[0];
+			triangulo_proyectado.pos[1] = vertices_transformados[1];
+			triangulo_proyectado.pos[2] = vertices_transformados[2];
 
-				Vec4 punto_proyectado = proyeccion(&PM,pp);	//proyeccion_perspectiva_div(vertices_transformados[j],fovf);
-				//escala ya que los puntos estan entre 0-1 
-				punto_proyectado.unpack.y *= estadosrender.ven_height/2.f;
-				punto_proyectado.unpack.x *= estadosrender.ven_width/2.f;
+			triangulo_proyectado.avg_z = avg_z;
+			triangulo_proyectado.color.hex = img[0]; //0xAB1056FF;
+			normal_triangulo(&triangulo_proyectado);
+			float intesidad = -dot_vec3(triangulo_proyectado.normal, luz.direccion);
+			triangulo_proyectado.color.hex = luz_intensidad(triangulo_proyectado.color.hex, intesidad);
+
+			triangulo_proyectado.normal = normal_triangulo(&triangulo_proyectado);
+			for(int j = 0; j < 3; ++j) {
+				Vec4 pp = {{vertices_transformados[j].unpack.x, 
+					    vertices_transformados[j].unpack.y, 
+					    vertices_transformados[j].unpack.z, 
+					    1.f}};
+
+				Mat4 PM = mat4_matriz_proyeccion(fovf, estadosrender.w_height / (float)estadosrender.w_width, 1.f, 100.f);
+
+				Vec4 punto_proyectado = proyeccion(&PM, pp);
+
+				// Escala ya que los puntos estan entre 0-1
+				punto_proyectado.unpack.y *= estadosrender.w_height / 2.f;
+				punto_proyectado.unpack.x *= estadosrender.w_width / 2.f;
 				punto_proyectado.unpack.y *= -1;
-				//centrar
-				punto_proyectado.unpack.y += estadosrender.ven_height/2.f;
-				punto_proyectado.unpack.x += estadosrender.ven_width/2.f;
 
-				//generar triangulo
-				triangulo_proyectado.p[j].unpack.x = punto_proyectado.unpack.x;
-				triangulo_proyectado.p[j].unpack.y = punto_proyectado.unpack.y;
-				triangulo_proyectado.p[j].unpack.z = punto_proyectado.unpack.z;
+				// Centrar
+				punto_proyectado.unpack.y += estadosrender.w_height / 2.f;
+				punto_proyectado.unpack.x += estadosrender.w_width / 2.f;
+
+				// Generar triangulos
+				triangulo_proyectado.pos[j].unpack.x = punto_proyectado.unpack.x;
+				triangulo_proyectado.pos[j].unpack.y = punto_proyectado.unpack.y;
+				triangulo_proyectado.pos[j].unpack.z = punto_proyectado.unpack.z;
 			}
 
-			// flat shadding
-			triangulo_proyectado.avg_z = avg_z;
-			triangulo_proyectado.color.hex = 0xAB1056FF;	// se deberia de cargar el color antes en mesh
-			triangulo_proyectado.normal = normal_triangulo(&triangulo_proyectado);
-			float intensidad = -dot_vec3(triangulo_proyectado.normal, luz.direccion);
-			triangulo_proyectado.color.hex = luz_intensidad(triangulo_proyectado.color.hex, intensidad);
-			//int dummy;
-			//scanf("%d", &dummy);
-			//cubo_triangulos[i] = triangulo_proyectado;
+			// antes de hacer el push a triangulo, agregamos los UV
+			triangulo_proyectado.texuv[0] = estadosrender.meshes[m].indices[i].a_uv;
+			triangulo_proyectado.texuv[1] = estadosrender.meshes[m].indices[i].b_uv;
+			triangulo_proyectado.texuv[2] = estadosrender.meshes[m].indices[i].c_uv;
+
 			pushto_array(estadosrender.meshes[m].triangulos, triangulo_proyectado);
 		}
 
-		// painters algorithm oredenar por promedio de profundidad
-		/*
-		qsort(estadosrender.meshes[m].triangulos,
-				array_size(estadosrender.meshes[m].triangulos),
-				sizeof(estadosrender.meshes[m].triangulos[0]),
-				comparar);
-		*/
+		// Painters algorithm ordenar por promedio por profundidad
+		qsort(estadosrender.meshes[m].triangulos, 
+			array_size(estadosrender.meshes[m].triangulos), 
+			sizeof(estadosrender.meshes[m].triangulos[0]), 
+			comparar);
 	}
 }
 
-// No se usa de momento
-Vec2 *pivote_mas_cerca(Vec2 mp, Figuras* figs, float umbral)
-{	
-	int a = 0;
-	int b = array_size(figs) - 1;
+void render_input(void) {
 
-	float low;
-	float high;
-	float centro;
-	
-	for(int i=0; i<array_size(figs); i++)
-	{
-		int r = (a+b)/2;
-		low = distanciav2(mp, figs[a].cuadro.pos);
-		high = distanciav2(mp, figs[b].cuadro.pos);
-		centro = distanciav2(mp, figs[r].cuadro.pos);
+    if(estadosrender.evento.type == SDL_EVENT_QUIT) {
+        estadosrender.run = 0;
+    }
 
-		if(fabs(low) <= umbral)
-			return &figs[a].cuadro.pos;
-		else if(fabs(high) <= umbral)
-			return &figs[b].cuadro.pos;
-		else if(fabs(centro) <= umbral)
-			return &figs[r].cuadro.pos;
+	if (estadosrender.evento.type == SDL_EVENT_KEY_DOWN) {
+        switch (estadosrender.evento.key.scancode) {
+            case SDL_SCANCODE_1:
+                // Alternar RENDER_MESH_PUNTOS (corresponde a dotsFlag)
+                render_mesh_mode ^= RENDER_MESH_PUNTOS;
+                // printf("Modo: %d\n", render_mode_actual);
+                break;
 
-		if(r < b)
-			b = r;
-		else if(r > a)
-			a = r;
-	}
-	return NULL;
+            case SDL_SCANCODE_2:
+                // Alternar RENDER_MESH_VERTICES (corresponde a vertexFlag)
+                render_mesh_mode ^= RENDER_MESH_VERTICES;
+                break;
+
+            case SDL_SCANCODE_3:
+                // Alternar RENDER_MESH_RELLENO (corresponde a fillFlag)
+                render_mesh_mode ^= RENDER_MESH_RELLENO;
+                break;
+
+			case SDL_SCANCODE_5: 
+                // Alternar RENDER_TEXT_MESH
+                render_mesh_mode ^= RENDER_TEXT_MESH;
+                break;
+            
+            case SDL_SCANCODE_4:
+                 // backFaceCullingFlag se mantiene como booleano si no lo incluyes en el enum
+                 backFaceCullingFlag = !backFaceCullingFlag;
+                 break;
+			
+			default:
+                break;
+        }
+    }
+	/*
+    if(estadosrender.evento.type == SDL_EVENT_KEY_DOWN && estadosrender.evento.key.scancode == SDL_SCANCODE_1){
+	// printf("dotsFlag: %d", dotsFlag);
+	dotsFlag = !dotsFlag;
+    }
+
+    if(estadosrender.evento.type == SDL_EVENT_KEY_DOWN && estadosrender.evento.key.scancode == SDL_SCANCODE_2){
+	// printf("vertexFlag: %d", vertexFlag);
+	vertexFlag = !vertexFlag;
+    }
+
+    if(estadosrender.evento.type == SDL_EVENT_KEY_DOWN && estadosrender.evento.key.scancode == SDL_SCANCODE_3){
+	// printf("fillFlag: %d", fillFlag);
+	fillFlag = !fillFlag;
+    }
+
+    if(estadosrender.evento.type == SDL_EVENT_KEY_DOWN && estadosrender.evento.key.scancode == SDL_SCANCODE_4){
+	// printf("backFaceCullingFlag: %d", backFaceCullingFlag);
+	backFaceCullingFlag = !backFaceCullingFlag;
+    }
+	*/
+
+    //if(estadosrender.evento.type == SDL_EVENT_MOUSE_BUTTON_DOWN){
+    //    // Buscar el pivote mas cerca
+    //    // Obtener referencia de la figura
+    //    // Modificar
+
+    //    // printf("(%.3f, %.3f)\n", estadosrender.evento.motion.x, estadosrender.evento.motion.y);
+
+    //    Vec2 *pivote = pivote_mas_cerca((Vec2){{estadosrender.evento.motion.x,
+    //                                           estadosrender.evento.motion.y}},
+    //                                           estadosrender.figuras_temp_buffer,
+    //                                           20.f);
+
+    //    if(!punto_seleccionado){
+    //        punto_seleccionado = pivote_mas_cerca((Vec2){{estadosrender.evento.motion.x,
+    //                                                      estadosrender.evento.motion.y}},
+    //                                                      estadosrender.figuras_temp_buffer,
+    //                                                      20.f);
+    //    }
+
+    //    if(punto_seleccionado){
+    //        printf("Punto cercano (%.3f, %.3f)\n",pivote -> unpack.x, pivote -> unpack.y);
+    //    }
+
+    //} else if (estadosrender.evento.type == SDL_EVENT_MOUSE_BUTTON_UP){
+    //    // Modificar la figura
+    //    if(punto_seleccionado){
+    //        punto_seleccionado->unpack.x = estadosrender.evento.motion.x;
+    //        punto_seleccionado->unpack.y = estadosrender.evento.motion.y;
+    //        punto_seleccionado = NULL;
+    //    }
+    //}
 }
 
-void render_input(void)
-{
-	if(estadosrender.evento.type == SDL_EVENT_QUIT)
-	{
-		estadosrender.run =0;
-	}
-
-	if(estadosrender.evento.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
-	{
-	}
-
-	else if(estadosrender.evento.type == SDL_EVENT_MOUSE_BUTTON_UP)
-	{
-	}
+void clear_color_buffer(){
+    for(int y = 0; y < estadosrender.w_height; ++y){
+        for(int x = 0; x < estadosrender.w_width; ++x){
+            draw_pixel(x, y, estadosrender.clear_color.hex);
+        }
+    }
 }
 
-void clear_color_buffer(void) 
-{
-	for(int y=0; y<estadosrender.ven_height; ++y) 
-	{
-		for(int x=0; x<estadosrender.ven_width; ++x) 
-		{
-			draw_pixel(x, y, estadosrender.clear_color.hex);
-		}
-	}
+void copy_buffer_to_texture(){
+    SDL_UpdateTexture(estadosrender.texture, 
+                      NULL, 
+                      estadosrender.color_buffer, 
+                      (int)(estadosrender.w_width * sizeof(int)));
+
+    SDL_RenderTexture(estadosrender.renderer, 
+                      estadosrender.texture, 
+                      NULL, 
+                      NULL);
 }
 
-void copy_buffer_to_texture(void) 
-{
-	SDL_UpdateTexture(estadosrender.textura,
-			NULL,
-			estadosrender.color_buffer,
-			(int)(estadosrender.ven_width*sizeof(int)));
-
-	SDL_RenderTexture(estadosrender.renderer, 
-						estadosrender.textura, 
-						NULL, 
-						NULL);
-}
-
-void _init(void) 
-{
+void _Init(){
 	camara.unpack.z = -5.f;
 
-	// cargar mesh
+	// Cargar mesh
 	Mesh cubo = loadMesh("assets/cube.obj", VERTICES | INDICES);
 
 	pushto_array(estadosrender.meshes, cubo);
@@ -227,80 +292,74 @@ void _init(void)
 
 	estadosrender.meshes[0].escala.unpack.x = 1.f;
 	estadosrender.meshes[0].escala.unpack.y = 1.f;
-	estadosrender.meshes[0].escala.unpack.z = 1.f;
+	estadosrender.meshes[0].escala.unpack.z = 1.f; 
+	
+	estadosrender.meshes[0].traslado.unpack.z = 5.f;
 
-	estadosrender.meshes[0].traslado.unpack.z = 4.5f;
-
-	/*
-	// es espacio local, crear el cubo
-	int p = 0;
-	for(float x=-1; x<=1; x+= 0.25)
-	{
-		for(float y=-1; y<=1; y+=0.25)
-		{
-			for(float z=-1; z<=1; z+=0.25)
-			{
-				Vec3 punto = {{x, y, z}};
-				cubo_puntos[p++] = punto;
-			}
-		}
-	}
-	*/
+	int imgx, imgy, imgcomp;
+	img = cargar_imagen("assets/test.png", &imgx, &imgy, &imgcomp, 3);
+	if (!img) {
+        fprintf(stderr, "Error: No se pudo cargar la imagen de textura.\n");
+        // Manejar el fallo, posiblemente salir del programa o usar un color por defecto.
+    }
+	printf("(%d, %d, %d)\n", imgx, imgy, imgcomp);
 }
 
-void update(void) 
-{
-	estadosrender.meshes[0].rotacion.unpack.x += 0.001f;
-	estadosrender.meshes[0].rotacion.unpack.y += 0.001f;
-	estadosrender.meshes[0].rotacion.unpack.z += 0.001f;
+void update(){
+	estadosrender.meshes[0].rotacion.unpack.x += 0.002f;
+	estadosrender.meshes[0].rotacion.unpack.y += 0.002f;
+	estadosrender.meshes[0].rotacion.unpack.z += 0.002f;
+
 	transformar();
 }
 
-void render_frame(void) 
-{
-	// por cada mesh
-	for(int m=0; m<array_size(estadosrender.meshes); ++m)
-	{
-		// por cada triangulo
+void render_frame(){
+	// Por cada mesh
+	for(int m = 0; m < array_size(estadosrender.meshes); ++m){
+		// Por cada triangulo
 		int num_trian = array_size(estadosrender.meshes[m].triangulos);
-		for (int i = 0; i < num_trian; i++) {
-			// vertices de los triangulos
-			Triangulo trian = estadosrender.meshes[m].triangulos[i];	//cubo_triangulos[i];
+		for(int i = 0; i < num_trian; i++){
+			// Vertices de los triangulos
+			Triangulo trian = estadosrender.meshes[m].triangulos[i];
 
-			/*
-			//painter algorithm
-			if((render_mesh_mode & RENDER_MESH_PUNTOS) > 0)
-			{
-				fill_cuadro(trian.p[0], 4, 4, 0xff00ffff, 0xff00ffff);
-				fill_cuadro(trian.p[1], 4, 4, 0xff00ffff, 0xff00ffff);
-				fill_cuadro(trian.p[2], 4, 4, 0xff00ffff, 0xff00ffff);
+			if((render_mesh_mode & RENDER_MESH_PUNTOS) > 0){
+				fill_cuadro(trian.pos[0], 4, 4, 0x0000FFFF, 0x000000FF);
+				fill_cuadro(trian.pos[1], 4, 4, 0x0000FFFF, 0x000000FF);
+				fill_cuadro(trian.pos[2], 4, 4, 0x0000FFFF, 0x000000FF);
 			}
-			*/
+			// Lineas de los triangulos
+			if((render_mesh_mode & RENDER_MESH_VERTICES) > 0){
+				draw_trian(trian.pos[0].unpack.x, trian.pos[0].unpack.y,
+					   trian.pos[1].unpack.x, trian.pos[1].unpack.y,
+				   	   trian.pos[2].unpack.x, trian.pos[2].unpack.y, 0x00FFFFFF);
+			}
 			
-			// lineas de los triangulos
-			//fill_trian(trian.p[0], trian.p[1], trian.p[2], trian.color.hex, trian.color.hex);
-			fill_trian(trian);
+			if((render_mesh_mode & RENDER_MESH_RELLENO) > 0){
+				fill_triangulo(&trian, trian.color.hex);
+			}
 
-			draw_trian(trian.p[0].unpack.x, trian.p[0].unpack.y,
-						trian.p[1].unpack.x, trian.p[1].unpack.y,
-						trian.p[2].unpack.x, trian.p[2].unpack.y,
-						0xff00ffff);
-    	}
+			if((render_mesh_mode & RENDER_TEXT_MESH) > 0)
+			{
+				tex_trian(	trian.pos[0], trian.texuv[0],
+							trian.pos[1], trian.texuv[1],
+							trian.pos[2], trian.texuv[2],
+							img, 64, 64);
+			}
+		}
 	}
-
-	SDL_RenderPresent(estadosrender.renderer);
+		SDL_RenderPresent(estadosrender.renderer);
 }
 
-int back_face_culling(Vec3 camara, Vec3 *puntos)
-{
+int back_face_culling(Vec3 camara, Vec3 *puntos){
 	Vec3 BA = resta_vec3(puntos[1], puntos[0]);
 	normalizar_vec3_inplace(&BA);
 	Vec3 CA = resta_vec3(puntos[2], puntos[0]);
 	normalizar_vec3_inplace(&CA);
+
 	Vec3 N = cross_vec3(BA, CA);
 	normalizar_vec3_inplace(&N);
 	Vec3 Ray = resta_vec3(camara, puntos[0]);
 	normalizar_vec3_inplace(&Ray);
+
 	return dot_vec3(N, Ray) > 0;
 }
-

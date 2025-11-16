@@ -1,57 +1,44 @@
-#include <math.h>
-#include <stdlib.h>
 #include "draw.h"
 #include "linea.h"
+#include <math.h>
 
-#define PI 3.141592
+#define PI 3.14159265358979323846
 
-void draw_circuloTrig(int radio, int x, int y, int numvertices, uint32_t color)
-{
-	for(int i=0; i<numvertices; i++)
-	{
-		float angulo = i * (2*PI) / numvertices;
-		float angulo_s = (((i + 1) % numvertices) * 2 * PI) / numvertices;
-		float xa = x + cos(angulo) * radio;
-		float ya = y + sin(angulo) * radio;
-		float xs = x + cos(angulo_s) * radio;
-		float ys = y + sin(angulo_s) * radio;
+void draw_circuloTrig(int radio, int x0, int y0, int numvertices, uint32_t color){
+    for(int i = 0; i < numvertices; ++i){
+        float angulo = (i * 2 * PI) / numvertices;
+        float angulo_s = (((i + 1) % numvertices) * 2 * PI) / numvertices;
 
-		linea_brhm(xa, ya, xs, ys, color);
-	}
+        int xa = x0 + cos(angulo) * radio;
+        int ya = y0 + sin(angulo) * radio;
+        int xs = x0 + cos(angulo_s) * radio;
+        int ys = x0 + sin(angulo_s) * radio;
+
+        draw_linea(xa, ya, xs, ys, color);
+    }
 }
 
+void draw_circuloPM(int radio , int x0 , int y0, uint32_t color){
+    int x = 0;
+    int y = radio;
+    int p = 1 - radio;
 
-void draw_circuloPM(int radio, int xc, int yc, int borde, uint32_t color)
-{
-	for (int r = radio - borde + 1; r <= radio; r++)
-	{
-		int x = 0;
-		int y = r;
-		int p = 1 - r;
+    while(x <= y){
+        draw_pixel(x0 + x, y0 + y, color);
+        draw_pixel(x0 - x, y0 + y, color);
+        draw_pixel(x0 + x, y0 - y, color);
+        draw_pixel(x0 - x, y0 - y, color);
+        draw_pixel(x0 + y, y0 + x, color);
+        draw_pixel(x0 - y, y0 + x, color);
+        draw_pixel(x0 + y, y0 - x, color);
+        draw_pixel(x0 - y, y0 - x, color);
+        x++;
 
-		while(x <= y)
-		{
-			draw_pixel(xc + x, yc + y, color);
-			draw_pixel(xc - x, yc + y, color);
-			draw_pixel(xc + x, yc - y, color);
-			draw_pixel(xc - x, yc - y, color);
-			draw_pixel(xc + y, yc + x, color);
-			draw_pixel(xc - y, yc + x, color);
-			draw_pixel(xc + y, yc - x, color);
-			draw_pixel(xc - y, yc - x, color);
-			x++;
-
-			if(p<0)
-			{ 
-				p += (2 * x) + 1;
-			}
-			
-			else
-			{
-				y--;
-				p += 2 * (x - y) + 1;
-			}
-		}
-	}
+        if(p < 0){
+            p += 2 * x + 1;
+        }else{
+            y--;
+            p += 2 * (x - y) + 1;
+        }
+    }
 }
-

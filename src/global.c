@@ -1,19 +1,14 @@
 #include "global.h"
 
-EstadosRender estadosrender = {
-	.renderer = 0,
-	.textura = 0,
-	.evento = {0},
-	.color_buffer = 0,
-	.clear_color = {0x00707ff},
-	.ven_width = 1080,
-	.ven_height = 720,
-	.run = 1,
-	.meshes = 0
-	//.figuras_buffer = 0,
-	//.figuras_temp_buffer = 0
-};
-
-//TTF_Font* font = NULL;
-
-
+EstadoRender estadosrender = {.color_buffer = 0,
+                              .evento = {0},
+                              .renderer = 0,
+                              .texture = 0,
+                              .w_width = 1080,
+                              .w_height = 720,
+                              .clear_color = {0x070707FF},
+                              .run = 1,
+			      .meshes = 0
+                              //.figuras_buffer = 0,
+			      //.figuras_temp_buffer = 0
+			      };
