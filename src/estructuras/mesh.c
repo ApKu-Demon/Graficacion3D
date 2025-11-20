@@ -22,7 +22,7 @@ Mesh loadMesh(const char *filePath, MeshOpciones opt){
             pushto_array(nuevo.texturaUV, uv);
         }
         
-        // 2. Lectura de Vértices 'v'
+        // 2. Lectura de Vertices 'v'
         // Lo dejamos en segundo lugar ya que no accede a otros arrays.
         else if ((renglon[0] == 'v' && renglon[1] == ' ') & ((opt & VERTICES) == VERTICES)) {
             Vec3 vertice = {{0}};
@@ -47,11 +47,11 @@ Mesh loadMesh(const char *filePath, MeshOpciones opt){
             int num_uvs_cargados = array_size(nuevo.texturaUV); 
             
             // Verificamos si la opcion UV esta activa Y si el indice de textura 
-            // mas grande es menor o igual al número de UVs cargados.
+            // mas grande es menor o igual al numero de UVs cargados.
             if ((opt & UV) == UV && num_uvs_cargados >= textura_id.a && 
                 num_uvs_cargados >= textura_id.b && num_uvs_cargados >= textura_id.c) 
             {
-                // Acceso seguro: el array ya está lleno
+                // Acceso seguro: el array ya esta lleno
                 vertice_id.a_uv = nuevo.texturaUV[textura_id.a - 1];
                 vertice_id.b_uv = nuevo.texturaUV[textura_id.b - 1];
                 vertice_id.c_uv = nuevo.texturaUV[textura_id.c - 1];
