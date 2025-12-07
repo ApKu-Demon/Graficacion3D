@@ -7,11 +7,14 @@ float distanciav2(Vec2 p1, Vec2 p2){
                 (p2.unpack.y - p1.unpack.y) * (p2.unpack.y - p1.unpack.y);
 }
 
-Vec3 vec4_to_vec3(Vec4 *p){
-	float w = p -> unpack.w;
-	return (Vec3){{p -> unpack.x / w,
-			p -> unpack.y / w,
-			p -> unpack.z / w}};
+Vec3 vec4_to_vec3(Vec4 *p)
+{
+	return (Vec3){{p->unpack.x, p->unpack.y, p->unpack.z}};
+}
+
+Vec4 vec3_to_vec4(Vec3 *p)
+{
+	return (Vec4){{p->unpack.x, p->unpack.y, p->unpack.z, 1.f}};
 }
 
 Vec3 cross_vec3(Vec3 p, Vec3 v){

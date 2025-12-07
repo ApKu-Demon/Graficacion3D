@@ -8,9 +8,10 @@
 
 typedef struct _estado{
     uint32_t *color_buffer;
+    float *z_buffer;
     SDL_Event evento;
     SDL_Renderer *renderer;
-    SDL_Texture *texture;
+    SDL_Texture *textura;
     int w_width;
     int w_height;
     Color clear_color;

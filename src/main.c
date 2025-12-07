@@ -56,6 +56,7 @@ int main(int argc, char** argv){
                 grabar = 0;
             }
             copy_buffer_to_texture();
+            clear_z_buffer();
             clear_color_buffer();
             render_frame();
 
@@ -78,23 +79,29 @@ void render_init(void){
     assert(estadosrender.renderer && "No se creó el render...\n");
 
     estadosrender.color_buffer = malloc(estadosrender.w_width * estadosrender.w_height * sizeof(uint32_t));
-    assert(estadosrender.color_buffer && "No se creó el color buffer...\n");
 
-    estadosrender.texture = SDL_CreateTexture(estadosrender.renderer, 
+    // Z buffer
+    estadosrender.z_buffer = calloc(estadosrender.w_width * estadosrender.w_height, sizeof(float));
+
+    assert(estadosrender.color_buffer && "No se pudo crear el color buffer...\n");
+    assert(estadosrender.z_buffer && "No se pudo crear el color buffer...\n");
+
+    estadosrender.textura = SDL_CreateTexture(estadosrender.renderer, 
                                               SDL_PIXELFORMAT_RGBA8888, 
                                               SDL_TEXTUREACCESS_STREAMING, 
                                               estadosrender.w_width, 
                                               estadosrender.w_height);
-    assert(estadosrender.texture && "No se creó la textura...\n");
+    assert(estadosrender.textura && "No se creó la textura...\n");
 }
 
 void render_clean(void){
     free_array(estadosrender.meshes);
     //free(estadosrender.figuras_buffer);
-    SDL_DestroyTexture(estadosrender.texture);
+    SDL_DestroyTexture(estadosrender.textura);
     SDL_DestroyRenderer(estadosrender.renderer);
     SDL_DestroyWindow(window);
     free(estadosrender.color_buffer);
+    free(estadosrender.z_buffer);
 }
 
 void grabar_imagen(void){

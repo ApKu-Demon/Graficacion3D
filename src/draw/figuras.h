@@ -38,10 +38,10 @@ typedef struct  _circulo{
 }Circulo;
 
 typedef struct _triangulo{
-    Vec3 pos[3];
+    Vec4 pos[3];    // de Vec3 a VEc4
     Color color;
-    TypeFig type;
-    float avg_z;
+    //TypeFig type;
+    //float avg_z;
     Vec3 normal;
     TexturaUV texuv[3];
 }Triangulo;

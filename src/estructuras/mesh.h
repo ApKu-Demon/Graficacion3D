@@ -11,6 +11,7 @@ typedef struct _mesh{
 	Cara_t *n_indices;
 	Triangulo *triangulos;	// triangulo a render
 	TexturaUV *texturaUV;	// indice del UV
+	Textura textura;
 
 	Vec3 rotacion;
 	Vec3 escala;
@@ -21,8 +22,7 @@ typedef enum{
 	VERTICES = 2 << 0,
 	NORMALES = 2 << 1,
 	INDICES  = 2 << 2,
-	//TEXTURAS = 2 << 3,
-	UV = 2 << 3,
+	UV 		 = 2 << 3,
 }MeshOpciones;
 
 Mesh loadMesh(const char* fiilePath, MeshOpciones opt);

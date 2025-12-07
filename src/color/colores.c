@@ -25,16 +25,16 @@ uint32_t *cargar_imagen(const char *path, int *x, int *y, int *c, int n) {
 
     uint32_t *img = (uint32_t*)data;
 
-    if(*c == 3 && n == 4) {
+    // if(*c == 3 && n == 4) 
+     {
         for(int i = 0; i < *x * *y; ++i) {
             uint8_t a = (img[i]& 0xff000000) >> 24;
             uint8_t b = (img[i]& 0x00ff0000) >> 16;
             uint8_t g = (img[i]& 0x0000ff00) >> 8;
-            uint8_t r = (img[i]& 0x000000ff);
-
+            uint8_t r = (img[i]& 0x000000ff);             
             img[i] = ARGB_TO_RGBA(r, g, b, a);
         }
-    }
+     }
 
     return img;
 }

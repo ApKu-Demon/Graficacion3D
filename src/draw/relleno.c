@@ -106,9 +106,9 @@ void fill_triangulo(Triangulo *triangulo, uint32_t color){
     float cy, cx;
     Vec3 y[3];
 
-    y[0] = triangulo -> pos[0];
-    y[1] = triangulo -> pos[1];
-    y[2] = triangulo -> pos[2];
+    y[0] = vec4_to_vec3(&triangulo -> pos[0]);
+    y[1] = vec4_to_vec3(&triangulo -> pos[1]);
+    y[2] = vec4_to_vec3(&triangulo -> pos[2]);
     ordenar_y(y);
 
     // Pintar
