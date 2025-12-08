@@ -17,3 +17,4 @@ typedef struct _textura
 void swapUV(TexturaUV *tuv1, TexturaUV *tuv2);
 
 
+

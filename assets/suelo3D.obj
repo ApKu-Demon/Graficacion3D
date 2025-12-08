@@ -1,0 +1,57 @@
+# suelo3D.obj
+# Es una caja aplastada (20x20, 0.5 de grosor)
+
+# --- VERTICES ---
+# Parte de ARRIBA
+v -10.0 -2.0 -10.0  # 1
+v  10.0 -2.0 -10.0  # 2
+v  10.0 -2.0  10.0  # 3
+v -10.0 -2.0  10.0  # 4
+
+# Parte de ABAJO
+v -10.0 -2.5 -10.0  # 5
+v  10.0 -2.5 -10.0  # 6
+v  10.0 -2.5  10.0  # 7
+v -10.0 -2.5  10.0  # 8
+
+# --- UVs (Textura) ---
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+# --- NORMALES ---
+# Normales apuntando hacia afuera para cada cara
+vn  0.0  1.0  0.0  # 1 Arriba
+vn  0.0 -1.0  0.0  # 2 Abajo
+vn  0.0  0.0  1.0  # 3 Frente
+vn  0.0  0.0 -1.0  # 4 Atras
+vn  1.0  0.0  0.0  # 5 Derecha
+vn -1.0  0.0  0.0  # 6 Izquierda
+
+# --- CARAS (Triangulos) ---
+# Formato: f v/vt/vn
+
+# CARA ARRIBA
+f 1/1/1 4/4/1 3/3/1
+f 1/1/1 3/3/1 2/2/1
+
+# CARA FRONTAL
+f 4/4/3 8/1/3 7/2/3
+f 4/4/3 7/2/3 3/3/3
+
+# CARA TRASERA
+f 2/3/4 6/2/4 5/1/4
+f 2/3/4 5/1/4 1/4/4
+
+# CARA DERECHA
+f 3/3/5 7/2/5 6/1/5
+f 3/3/5 6/1/5 2/4/5
+
+# CARA IZQUIERDA
+f 1/4/6 5/1/6 8/2/6
+f 1/4/6 8/2/6 4/3/6
+
+# CARA ABAJO
+f 5/1/2 6/2/2 7/3/2
+f 5/1/2 7/3/2 8/4/2

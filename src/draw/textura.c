@@ -7,3 +7,5 @@ void swapUV(TexturaUV *tuv1, TexturaUV *tuv2)
     *tuv1 = *tuv2; 
     *tuv2 = temp;
 }
+
+

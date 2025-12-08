@@ -1,0 +1,23 @@
+# suelo.obj
+# Un plano simple de 4 vertices
+
+# Vertices (x, y, z)
+# Y está en -2.0 para que quede debajo del cangrejo
+v -10.0 -2.0 -10.0
+v  10.0 -2.0 -10.0
+v  10.0 -2.0  10.0
+v -10.0 -2.0  10.0
+
+# Coordenadas de Textura (UV)
+# Las ponemos de 0 a 10 para que si pones una textura, se repita 10 veces (efecto grid)
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+# Normales (Apuntando hacia arriba)
+vn 0.0 -1.0 0.0
+
+# Caras (f v/vt/vn ...)
+f 3/3/1 2/2/1 1/1/1
+f 4/4/1 3/3/1 1/1/1

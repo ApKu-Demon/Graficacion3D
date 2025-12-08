@@ -44,6 +44,7 @@ typedef struct _triangulo{
     //float avg_z;
     Vec3 normal;
     TexturaUV texuv[3];
+    float intensidad_luz;
 }Triangulo;
 
 typedef struct _linea{

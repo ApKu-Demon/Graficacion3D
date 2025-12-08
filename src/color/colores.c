@@ -31,7 +31,8 @@ uint32_t *cargar_imagen(const char *path, int *x, int *y, int *c, int n) {
             uint8_t a = (img[i]& 0xff000000) >> 24;
             uint8_t b = (img[i]& 0x00ff0000) >> 16;
             uint8_t g = (img[i]& 0x0000ff00) >> 8;
-            uint8_t r = (img[i]& 0x000000ff);             
+            uint8_t r = (img[i]& 0x000000ff); 
+                        
             img[i] = ARGB_TO_RGBA(r, g, b, a);
         }
      }

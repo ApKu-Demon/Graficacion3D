@@ -35,10 +35,10 @@ Vec3 barycentric_pesos(Vec3 a, Vec3 b, Vec3 c, Vec3 p);
 void draw_textura(int x, int y, 
                 Vec4 a, Vec4 b, Vec4 c, 
                 TexturaUV t1, TexturaUV t2, TexturaUV t3, 
-                uint32_t* textura, int tw, int th);
+                uint32_t* textura, int tw, int th, float intensidad_luz);
 void tex_trian(	Vec4 p1, TexturaUV tuv1, 
                 Vec4 p2, TexturaUV tuv2, 
                 Vec4 p3, TexturaUV tuv3, 
-                uint32_t *textura, int tw, int th);
+                uint32_t *textura, int tw, int th, float intensidad_luz);
 
 
